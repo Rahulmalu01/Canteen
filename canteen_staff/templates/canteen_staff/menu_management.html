@@ -1,0 +1,102 @@
+{% load static %}
+{% extends 'base.html' %}
+{% block title %}Menu Management — CanteenHub{% endblock %}
+{% block body_class %}role-staff{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top nav-staff">
+  <div class="container-fluid px-4">
+    <a class="navbar-brand fw-bold" href="{% url 'staff_dashboard' %}"><i class="bi bi-shop text-warning me-2"></i>Staff<span class="text-warning">Panel</span></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#stNav"><span class="navbar-toggler-icon"></span></button>
+    <div class="collapse navbar-collapse" id="stNav">
+      <ul class="navbar-nav me-auto gap-1">
+        <li class="nav-item"><a class="nav-link" href="{% url 'staff_dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link active" href="{% url 'menu_management' %}"><i class="bi bi-menu-button-wide"></i> Menu</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'daily_orders' %}"><i class="bi bi-list-check"></i> Daily Orders</a></li>
+      </ul>
+      <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="btn btn-outline-warning btn-sm">Logout</button></form>
+    </div>
+  </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h3 fw-bold mb-0"><i class="bi bi-menu-button-wide text-staff me-2"></i>Menu Management</h1>
+  <a href="{% url 'add_menu_item' %}" class="btn btn-staff fw-semibold"><i class="bi bi-plus-circle me-2"></i>Add Item</a>
+</div>
+
+<div class="card border-0">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr class="text-muted small text-uppercase">
+          <th>Item</th><th>Category</th><th>Price</th><th>Type</th><th>Available</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr id="itemrow_{{ item.id }}">
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              {% if item.image %}
+              <img src="{{ item.image.url }}" class="rounded" style="width:40px;height:40px;object-fit:cover;" alt="{{ item.name }}"/>
+              {% else %}
+              <div class="bg-secondary bg-opacity-25 rounded d-flex align-items-center justify-content-center" style="width:40px;height:40px"><i class="bi bi-egg-fried text-muted"></i></div>
+              {% endif %}
+              <div>
+                <div class="fw-semibold">{{ item.name }}</div>
+                <div class="text-muted small">{{ item.description|truncatewords:6 }}</div>
+              </div>
+            </div>
+          </td>
+          <td>{% if item.category %}<span class="badge bg-secondary bg-opacity-25 text-muted">{{ item.category.name }}</span>{% endif %}</td>
+          <td class="fw-semibold">₹{{ item.price }}</td>
+          <td>{% if item.is_veg %}<span class="badge bg-success bg-opacity-20 text-success">🟢 Veg</span>{% else %}<span class="badge bg-danger bg-opacity-20 text-danger">🔴 Non-Veg</span>{% endif %}</td>
+          <td>
+            <div class="form-check form-switch mb-0">
+              <input class="form-check-input availability-toggle" type="checkbox" role="switch"
+                     id="toggle_{{ item.id }}" {% if item.is_available %}checked{% endif %}
+                     data-item-id="{{ item.id }}" data-url="{% url 'toggle_availability' item.id %}"/>
+              <label class="form-check-label small" for="toggle_{{ item.id }}" id="togLabel_{{ item.id }}">
+                {% if item.is_available %}In Stock{% else %}Out of Stock{% endif %}
+              </label>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex gap-1">
+              <a href="{% url 'edit_menu_item' item.id %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+              <form method="post" action="{% url 'delete_menu_item' item.id %}" onsubmit="return confirm('Delete {{ item.name }}?')">
+                {% csrf_token %}
+                <button class="btn btn-sm btn-outline-danger" type="submit"><i class="bi bi-trash"></i></button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center text-muted py-4">No menu items yet. <a href="{% url 'add_menu_item' %}">Add one?</a></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// AJAX availability toggle
+document.querySelectorAll('.availability-toggle').forEach(toggle => {
+  toggle.addEventListener('change', function() {
+    const itemId = this.dataset.itemId;
+    const label = document.getElementById('togLabel_' + itemId);
+    fetch(this.dataset.url, {
+      method: 'POST',
+      headers: {'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json'}
+    }).then(r => r.json()).then(data => {
+      label.textContent = data.is_available ? 'In Stock' : 'Out of Stock';
+    }).catch(() => { this.checked = !this.checked; }); // Revert on error
+  });
+});
+function getCookie(n){return(document.cookie.split(';').map(c=>c.trim()).find(r=>r.startsWith(n+'='))||'').split('=')[1]||'';}
+</script>
+{% endblock %}

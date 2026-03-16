@@ -1,0 +1,118 @@
+{% load static %}
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard — CanteenHub{% endblock %}
+{% block body_class %}role-admin{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top nav-admin">
+  <div class="container-fluid px-4">
+    <a class="navbar-brand fw-bold" href="{% url 'admin_dashboard' %}"><i class="bi bi-shield-lock-fill text-warning me-2"></i>Admin<span class="text-warning">Panel</span></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#aNav"><span class="navbar-toggler-icon"></span></button>
+    <div class="collapse navbar-collapse" id="aNav">
+      <ul class="navbar-nav me-auto gap-1">
+        <li class="nav-item"><a class="nav-link active" href="{% url 'admin_dashboard' %}"><i class="bi bi-bar-chart-line"></i> Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'admin_user_management' %}"><i class="bi bi-people"></i> Users</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'admin_all_orders' %}"><i class="bi bi-receipt"></i> All Orders</a></li>
+      </ul>
+      <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="btn btn-outline-warning btn-sm">Logout</button></form>
+    </div>
+  </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<!-- KPI Cards -->
+<div class="row g-4 mb-4">
+  <div class="col-12"><h1 class="h3 fw-bold mb-0"><i class="bi bi-bar-chart-line text-admin me-2"></i>System Overview</h1></div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="card border-0 kpi-card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div><p class="text-muted small text-uppercase fw-semibold mb-1">Total Users</p><h2 class="fw-black mb-0">{{ total_users }}</h2></div>
+          <div class="kpi-icon text-admin"><i class="bi bi-people-fill"></i></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="card border-0 kpi-card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div><p class="text-muted small text-uppercase fw-semibold mb-1">Today's Orders</p><h2 class="fw-black mb-0">{{ orders_today }}</h2></div>
+          <div class="kpi-icon text-warning"><i class="bi bi-receipt-cutoff"></i></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="card border-0 kpi-card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div><p class="text-muted small text-uppercase fw-semibold mb-1">Today's Revenue</p><h2 class="fw-black mb-0">₹{{ revenue_today }}</h2></div>
+          <div class="kpi-icon text-success"><i class="bi bi-currency-rupee"></i></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="card border-0 kpi-card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div><p class="text-muted small text-uppercase fw-semibold mb-1">Pending Now</p><h2 class="fw-black mb-0">{{ pending_count }}</h2></div>
+          <div class="kpi-icon text-danger"><i class="bi bi-hourglass-split"></i></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts -->
+<div class="row g-4 mb-4">
+  <div class="col-lg-8">
+    <div class="card border-0 h-100">
+      <div class="card-header bg-transparent border-0"><h5 class="fw-bold mb-0">Revenue — Last 7 Days</h5></div>
+      <div class="card-body"><canvas id="revenueChart" height="100"></canvas></div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card border-0 h-100">
+      <div class="card-header bg-transparent border-0"><h5 class="fw-bold mb-0">Top 5 Items</h5></div>
+      <div class="card-body d-flex align-items-center justify-content-center"><canvas id="topItemsChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- Order Status Breakdown -->
+<div class="row g-4">
+  <div class="col-12">
+    <div class="card border-0">
+      <div class="card-header bg-transparent border-0"><h5 class="fw-bold mb-0">Order Status Breakdown</h5></div>
+      <div class="card-body">
+        <div class="row g-3 text-center">
+          {% for status_key, label in status_choices %}
+          <div class="col">
+            <div class="p-3 rounded-3 bg-secondary bg-opacity-10">
+              <div class="h3 fw-black mb-1">{{ status_counts|get_item:status_key }}</div>
+              <div class="small text-muted">{{ label }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script src="{% static 'js/charts.js' %}"></script>
+<script>
+initCharts(
+  {{ revenue_labels }},
+  {{ revenue_data }},
+  {{ top_labels }},
+  {{ top_data }}
+);
+</script>
+{% endblock %}

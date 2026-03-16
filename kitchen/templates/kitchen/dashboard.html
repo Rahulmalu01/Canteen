@@ -1,0 +1,72 @@
+{% load static %}
+{% extends 'base.html' %}
+{% block title %}Kitchen Queue — CanteenHub{% endblock %}
+{% block body_class %}role-kitchen{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top nav-kitchen">
+  <div class="container-fluid px-4">
+    <a class="navbar-brand fw-bold" href="{% url 'kitchen_dashboard' %}"><i class="bi bi-fire text-warning me-2"></i>Kitchen<span class="text-warning">Queue</span></a>
+    <div class="ms-auto d-flex align-items-center gap-3">
+      <span class="text-muted small d-none d-md-inline">{{ user.get_full_name|default:user.username }}</span>
+      <button class="btn btn-outline-light btn-sm" onclick="location.reload()"><i class="bi bi-arrow-clockwise me-1"></i>Refresh</button>
+      <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="btn btn-outline-warning btn-sm">Logout</button></form>
+    </div>
+  </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-12">
+    <h1 class="h3 fw-bold mb-1"><i class="bi bi-fire text-kitchen me-2"></i>Preparation Queue</h1>
+    <p class="text-muted small">Auto-refreshes every 30 seconds · Last update: <span id="lastRefresh">just now</span></p>
+  </div>
+
+  <!-- Pending -->
+  <div class="col-md-4">
+    <div class="card border-0 border-top border-3 border-danger h-100">
+      <div class="card-header bg-transparent border-0">
+        <h5 class="fw-bold mb-0"><span class="badge bg-danger me-2">{{ pending_orders.count }}</span>Pending</h5>
+      </div>
+      <div class="card-body d-flex flex-column gap-3">
+        {% for order in pending_orders %}{% include 'kitchen/order_card.html' with order=order next_status='preparing' btn_label='Start Preparing' btn_class='warning' %}{% empty %}
+        <div class="text-center text-muted py-4 small"><i class="bi bi-check-all d-block fs-3 mb-2 opacity-50"></i>No pending orders 🎉</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Preparing -->
+  <div class="col-md-4">
+    <div class="card border-0 border-top border-3 border-warning h-100">
+      <div class="card-header bg-transparent border-0">
+        <h5 class="fw-bold mb-0"><span class="badge bg-warning text-dark me-2">{{ preparing_orders.count }}</span>Preparing</h5>
+      </div>
+      <div class="card-body d-flex flex-column gap-3">
+        {% for order in preparing_orders %}{% include 'kitchen/order_card.html' with order=order next_status='ready' btn_label='Mark Ready' btn_class='success' %}{% empty %}
+        <div class="text-center text-muted py-4 small"><i class="bi bi-hourglass d-block fs-3 mb-2 opacity-50"></i>Nothing preparing</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Ready -->
+  <div class="col-md-4">
+    <div class="card border-0 border-top border-3 border-success h-100">
+      <div class="card-header bg-transparent border-0">
+        <h5 class="fw-bold mb-0"><span class="badge bg-success me-2">{{ ready_orders.count }}</span>Ready for Pickup</h5>
+      </div>
+      <div class="card-body d-flex flex-column gap-3">
+        {% for order in ready_orders %}{% include 'kitchen/order_card.html' with order=order next_status='completed' btn_label='Complete' btn_class='secondary' %}{% empty %}
+        <div class="text-center text-muted py-4 small"><i class="bi bi-bell d-block fs-3 mb-2 opacity-50"></i>Nothing ready yet</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/kitchen.js' %}"></script>
+{% endblock %}

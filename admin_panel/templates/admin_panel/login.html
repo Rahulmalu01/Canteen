@@ -1,0 +1,41 @@
+{% load static %}
+{% extends 'base.html' %}
+{% block title %}Admin Login — CanteenHub{% endblock %}
+{% block body_class %}role-admin{% endblock %}
+{% block main_class %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper min-vh-100 d-flex align-items-center justify-content-center">
+  <div class="auth-card card border-0 shadow-lg p-4" style="width:100%;max-width:420px">
+    <div class="text-center mb-4">
+      <div class="auth-icon text-admin mb-3"><i class="bi bi-shield-lock-fill fs-1"></i></div>
+      <span class="badge role-badge-admin mb-2">Admin Portal</span>
+      <h1 class="h3 fw-bold mb-1">Admin Login</h1>
+      <p class="text-muted small">Sign in to access system analytics & controls</p>
+    </div>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% for field in form %}
+      <div class="mb-3">
+        <label class="form-label fw-semibold small text-muted text-uppercase">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}<div class="invalid-feedback d-block small text-danger">{{ field.errors.0 }}</div>{% endif %}
+      </div>
+      {% endfor %}
+      {% if form.non_field_errors %}
+      <div class="alert alert-danger py-2 small">{{ form.non_field_errors.0 }}</div>
+      {% endif %}
+      <div class="d-grid mt-4">
+        <button type="submit" class="btn btn-admin btn-lg fw-bold">
+          <i class="bi bi-box-arrow-in-right me-2"></i>Sign In as Admin
+        </button>
+      </div>
+    </form>
+    <hr class="my-4"/>
+    <p class="text-center text-muted small mb-0">
+      <a href="{% url 'landing' %}" class="text-muted">← Other portals</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% load static %}
+{% extends 'base.html' %}
+{% block title %}Student Dashboard — CanteenHub{% endblock %}
+{% block body_class %}role-student{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top nav-student">
+  <div class="container-fluid px-4">
+    <a class="navbar-brand fw-bold" href="{% url 'student_dashboard' %}">
+      <i class="bi bi-shop-window text-warning me-2"></i>Canteen<span class="text-warning">Hub</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sNav"><span class="navbar-toggler-icon"></span></button>
+    <div class="collapse navbar-collapse" id="sNav">
+      <ul class="navbar-nav me-auto gap-1">
+        <li class="nav-item"><a class="nav-link active" href="{% url 'student_dashboard' %}"><i class="bi bi-house"></i> Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'menu' %}"><i class="bi bi-grid"></i> Menu</a></li>
+        <li class="nav-item">
+          <a class="nav-link position-relative" href="{% url 'cart' %}">
+            <i class="bi bi-cart3"></i> Cart
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark" id="cartBadge" style="font-size:.6rem">0</span>
+          </a>
+        </li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'order_history' %}"><i class="bi bi-clock-history"></i> Orders</a></li>
+      </ul>
+      <div class="d-flex align-items-center gap-3">
+        <span class="text-muted small d-none d-md-inline">{{ user.get_full_name|default:user.username }}</span>
+        <form method="post" action="{% url 'logout' %}">{% csrf_token %}
+          <button class="btn btn-outline-warning btn-sm" type="submit"><i class="bi bi-box-arrow-right me-1"></i>Logout</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-12">
+    <h1 class="h3 fw-bold mb-0">Welcome, {{ user.first_name|default:user.username }}! 👋</h1>
+    <p class="text-muted small">What would you like to order today?</p>
+  </div>
+
+  <div class="col-md-4">
+    <a href="{% url 'menu' %}" class="card card-hover border-0 text-decoration-none h-100">
+      <div class="card-body text-center py-4">
+        <div class="feature-icon text-student mb-3"><i class="bi bi-grid-3x3-gap-fill fs-2"></i></div>
+        <h5 class="fw-bold">Browse Menu</h5>
+        <p class="text-muted small mb-0">Explore today's food items</p>
+      </div>
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a href="{% url 'cart' %}" class="card card-hover border-0 text-decoration-none h-100">
+      <div class="card-body text-center py-4">
+        <div class="feature-icon text-success mb-3"><i class="bi bi-cart3 fs-2"></i></div>
+        <h5 class="fw-bold">My Cart</h5>
+        <p class="text-muted small mb-0">View and checkout your cart</p>
+      </div>
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a href="{% url 'order_history' %}" class="card card-hover border-0 text-decoration-none h-100">
+      <div class="card-body text-center py-4">
+        <div class="feature-icon text-info mb-3"><i class="bi bi-clock-history fs-2"></i></div>
+        <h5 class="fw-bold">Order History</h5>
+        <p class="text-muted small mb-0">Track all past orders</p>
+      </div>
+    </a>
+  </div>
+
+  {% if active_orders %}
+  <div class="col-12">
+    <div class="card border-0 border-start border-4 border-student">
+      <div class="card-header bg-transparent border-0 pb-0">
+        <h5 class="fw-bold mb-0"><i class="bi bi-lightning-charge-fill text-student me-2"></i>Active Orders</h5>
+      </div>
+      <div class="card-body pt-2">
+        {% for order in active_orders %}
+        <div class="d-flex justify-content-between align-items-center py-2 {% if not forloop.last %}border-bottom border-secondary border-opacity-25{% endif %}">
+          <div>
+            <span class="fw-semibold">Order #{{ order.id }}</span>
+            <span class="text-muted small ms-2">· Pickup {{ order.pickup_time|time:"g:i A" }}</span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge badge-status-{{ order.status }}">{{ order.get_status_display }}</span>
+            <a href="{% url 'order_status' order.id %}" class="btn btn-sm btn-outline-secondary">Track</a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/cart.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,120 @@
+{% load static %}
+{% extends 'base.html' %}
+{% block title %}Menu — CanteenHub{% endblock %}
+{% block body_class %}role-student{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top nav-student">
+  <div class="container-fluid px-4">
+    <a class="navbar-brand fw-bold" href="{% url 'student_dashboard' %}"><i class="bi bi-shop-window text-warning me-2"></i>Canteen<span class="text-warning">Hub</span></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sNav"><span class="navbar-toggler-icon"></span></button>
+    <div class="collapse navbar-collapse" id="sNav">
+      <ul class="navbar-nav me-auto gap-1">
+        <li class="nav-item"><a class="nav-link" href="{% url 'student_dashboard' %}"><i class="bi bi-house"></i> Home</a></li>
+        <li class="nav-item"><a class="nav-link active" href="{% url 'menu' %}"><i class="bi bi-grid"></i> Menu</a></li>
+        <li class="nav-item"><a class="nav-link position-relative" href="{% url 'cart' %}"><i class="bi bi-cart3"></i> Cart <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark" id="cartBadge" style="font-size:.6rem">0</span></a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'order_history' %}"><i class="bi bi-clock-history"></i> Orders</a></li>
+      </ul>
+      <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="btn btn-outline-warning btn-sm" type="submit"><i class="bi bi-box-arrow-right me-1"></i>Logout</button></form>
+    </div>
+  </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <!-- Sidebar -->
+  <div class="col-lg-3">
+    <div class="card border-0 sticky-top" style="top:76px">
+      <div class="card-header bg-student text-white fw-bold rounded-top"><i class="bi bi-funnel-fill me-2"></i>Filter Menu</div>
+      <div class="card-body">
+        <form method="get" id="filterForm">
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-muted text-uppercase">Search</label>
+            <div class="input-group">
+              <input type="text" name="search" value="{{ search }}" class="form-control" placeholder="Search items..."/>
+              <button class="btn btn-student" type="submit"><i class="bi bi-search"></i></button>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-muted text-uppercase">Category</label>
+            <select name="category" class="form-select" onchange="this.form.submit()">
+              <option value="">All Categories</option>
+              {% for cat in categories %}
+              <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-muted text-uppercase">Type</label>
+            <div class="d-flex gap-2">
+              <a href="?{% if search %}search={{ search }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}veg=veg" class="btn btn-sm {% if veg_filter == 'veg' %}btn-success{% else %}btn-outline-success{% endif %} flex-fill">🟢 Veg</a>
+              <a href="?{% if search %}search={{ search }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}veg=nonveg" class="btn btn-sm {% if veg_filter == 'nonveg' %}btn-danger{% else %}btn-outline-danger{% endif %} flex-fill">🔴 Non-Veg</a>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-muted text-uppercase">Max Price: ₹<span id="priceVal">{{ max_price|default:"500" }}</span></label>
+            <input type="range" name="max_price" class="form-range" min="10" max="500" step="10" value="{{ max_price|default:500 }}" oninput="document.getElementById('priceVal').textContent=this.value"/>
+          </div>
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-student fw-semibold">Apply Filters</button>
+            <a href="{% url 'menu' %}" class="btn btn-outline-secondary btn-sm">Clear All</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Menu Grid -->
+  <div class="col-lg-9">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="h4 fw-bold mb-0">{% if search %}Results for "{{ search }}"{% else %}Today's Menu{% endif %}</h2>
+      <span class="badge bg-secondary">{{ items.count }} items</span>
+    </div>
+    {% if items %}
+    <div class="row g-3">
+      {% for item in items %}
+      <div class="col-sm-6 col-xl-4">
+        <div class="card menu-card border-0 h-100">
+          {% if item.image %}
+          <img src="{{ item.image.url }}" class="card-img-top menu-card-img" alt="{{ item.name }}"/>
+          {% else %}
+          <div class="menu-card-placeholder d-flex align-items-center justify-content-center">
+            <i class="bi bi-egg-fried fs-1 text-muted opacity-25"></i>
+          </div>
+          {% endif %}
+          <div class="card-body d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-start mb-1">
+              <h5 class="card-title fw-bold mb-0 me-2">{{ item.name }}</h5>
+              <span title="{% if item.is_veg %}Vegetarian{% else %}Non-Vegetarian{% endif %}">{% if item.is_veg %}🟢{% else %}🔴{% endif %}</span>
+            </div>
+            {% if item.category %}<span class="badge bg-secondary bg-opacity-20 text-muted small mb-2">{{ item.category.name }}</span>{% endif %}
+            <p class="card-text text-muted small flex-grow-1">{{ item.description|truncatewords:10 }}</p>
+            <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top border-secondary border-opacity-25">
+              <span class="fw-bold fs-5 text-student">₹{{ item.price }}</span>
+              <div class="d-flex align-items-center gap-1">
+                <input type="number" id="qty_{{ item.id }}" min="1" max="10" value="1" class="form-control form-control-sm text-center" style="width:56px"/>
+                <button class="btn btn-student btn-sm add-to-cart-btn" data-item-id="{{ item.id }}" data-item-name="{{ item.name }}" title="Add to Cart">
+                  <i class="bi bi-cart-plus"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+      <i class="bi bi-search fs-1 text-muted opacity-25 mb-3 d-block"></i>
+      <h5 class="text-muted">No items match your filters</h5>
+      <a href="{% url 'menu' %}" class="btn btn-outline-student mt-2">Clear filters</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/cart.js' %}"></script>
+{% endblock %}

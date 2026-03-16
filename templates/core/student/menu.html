@@ -1,0 +1,126 @@
+{% extends 'core/base.html' %}
+{% block title %}Menu — CanteenHub{% endblock %}
+{% block content %}
+<div class="row g-4">
+
+  <!-- Sidebar Filters -->
+  <div class="col-lg-3">
+    <div class="card border-0 sticky-top" style="top:80px">
+      <div class="card-header bg-warning text-dark fw-bold">
+        <i class="bi bi-funnel-fill me-2"></i>Filter Menu
+      </div>
+      <div class="card-body">
+        <form method="get" id="filterForm">
+          <!-- Search -->
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-muted text-uppercase">Search</label>
+            <div class="input-group">
+              <input type="text" name="search" value="{{ search }}" class="form-control" placeholder="Search items..."/>
+              <button class="btn btn-warning" type="submit"><i class="bi bi-search"></i></button>
+            </div>
+          </div>
+
+          <!-- Category -->
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-muted text-uppercase">Category</label>
+            <select name="category" class="form-select" onchange="this.form.submit()">
+              <option value="">All Categories</option>
+              {% for cat in categories %}
+              <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:"s" %}selected{% endif %}>
+                {{ cat.name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Veg Filter -->
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-muted text-uppercase">Type</label>
+            <div class="d-flex gap-2">
+              <a href="?{% if search %}search={{ search }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}veg=veg"
+                 class="btn btn-sm {% if veg_filter == 'veg' %}btn-success{% else %}btn-outline-success{% endif %} flex-fill">
+                🟢 Veg
+              </a>
+              <a href="?{% if search %}search={{ search }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}veg=nonveg"
+                 class="btn btn-sm {% if veg_filter == 'nonveg' %}btn-danger{% else %}btn-outline-danger{% endif %} flex-fill">
+                🔴 Non-Veg
+              </a>
+            </div>
+          </div>
+
+          <!-- Max Price -->
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-muted text-uppercase">Max Price: ₹<span id="priceVal">{{ max_price|default:"500" }}</span></label>
+            <input type="range" name="max_price" class="form-range" min="10" max="500" step="10"
+                   value="{{ max_price|default:500 }}" id="priceRange" oninput="document.getElementById('priceVal').textContent=this.value"/>
+          </div>
+
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-warning fw-bold">Apply Filters</button>
+            <a href="{% url 'menu' %}" class="btn btn-outline-secondary btn-sm">Clear All</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Menu Grid -->
+  <div class="col-lg-9">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="h4 fw-bold mb-0">
+        <i class="bi bi-grid text-warning me-2"></i>
+        {% if search %}Results for "{{ search }}"{% else %}Today's Menu{% endif %}
+      </h2>
+      <span class="badge bg-secondary">{{ items.count }} items</span>
+    </div>
+
+    {% if items %}
+    <div class="row g-3" id="menuGrid">
+      {% for item in items %}
+      <div class="col-sm-6 col-xl-4">
+        <div class="card menu-card border-0 h-100">
+          {% if item.image %}
+          <img src="{{ item.image.url }}" class="card-img-top menu-card-img" alt="{{ item.name }}"/>
+          {% else %}
+          <div class="menu-card-img-placeholder d-flex align-items-center justify-content-center">
+            <i class="bi bi-egg-fried fs-1 text-muted opacity-50"></i>
+          </div>
+          {% endif %}
+          <div class="card-body d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-start mb-1">
+              <h5 class="card-title fw-bold mb-0 me-2">{{ item.name }}</h5>
+              <span class="veg-badge {% if item.is_veg %}veg{% else %}nonveg{% endif %}">
+                {% if item.is_veg %}🟢{% else %}🔴{% endif %}
+              </span>
+            </div>
+            {% if item.category %}<span class="badge bg-secondary bg-opacity-20 text-muted small mb-2">{{ item.category.name }}</span>{% endif %}
+            <p class="card-text text-muted small flex-grow-1">{{ item.description|truncatewords:12 }}</p>
+            <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top border-secondary border-opacity-25">
+              <span class="price-tag fw-bold fs-5">₹{{ item.price }}</span>
+              <div class="d-flex align-items-center gap-1">
+                <input type="number" id="qty_{{ item.id }}" min="1" max="10" value="1" class="form-control form-control-sm" style="width:60px"/>
+                <button class="btn btn-warning btn-sm fw-semibold add-to-cart-btn"
+                        data-item-id="{{ item.id }}" data-item-name="{{ item.name }}">
+                  <i class="bi bi-cart-plus"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+      <i class="bi bi-search fs-1 text-muted opacity-50 mb-3 d-block"></i>
+      <h5 class="text-muted">No items found</h5>
+      <a href="{% url 'menu' %}" class="btn btn-outline-warning mt-2">Clear filters</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% load static %}{% static 'core/js/cart.js' %}"></script>
+{% endblock %}

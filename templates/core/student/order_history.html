@@ -1,0 +1,52 @@
+{% extends 'core/base.html' %}
+{% block title %}Order History — CanteenHub{% endblock %}
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <h1 class="h3 fw-bold mb-4"><i class="bi bi-clock-history text-warning me-2"></i>Order History</h1>
+    {% if orders %}
+    <div class="card border-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr class="text-muted small text-uppercase">
+              <th>#</th><th>Date</th><th>Items</th><th>Pickup</th><th>Total</th><th>Status</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in orders %}
+            <tr>
+              <td class="fw-semibold text-warning">#{{ order.id }}</td>
+              <td class="text-muted small">{{ order.created_at|date:"d M Y" }}<br/>{{ order.created_at|time:"g:i A" }}</td>
+              <td>
+                {% for oi in order.items.all|slice:":2" %}
+                  <div class="small">{{ oi.quantity }}× {{ oi.menu_item.name }}</div>
+                {% endfor %}
+                {% if order.items.count > 2 %}
+                  <div class="small text-muted">+{{ order.items.count|add:"-2" }} more</div>
+                {% endif %}
+              </td>
+              <td class="small">{{ order.pickup_time|time:"g:i A" }}</td>
+              <td class="fw-bold">₹{{ order.total_amount }}</td>
+              <td><span class="badge status-{{ order.status }} rounded-pill">{{ order.get_status_display }}</span></td>
+              <td>
+                <a href="{% url 'order_status' order.id %}" class="btn btn-sm btn-outline-warning">
+                  <i class="bi bi-eye"></i>
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+      <i class="bi bi-receipt fs-1 text-muted opacity-50 mb-3 d-block"></i>
+      <h5 class="text-muted">No orders yet</h5>
+      <a href="{% url 'menu' %}" class="btn btn-warning mt-2">Order Now</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

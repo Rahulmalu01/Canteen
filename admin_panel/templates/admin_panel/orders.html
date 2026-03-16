@@ -1,0 +1,60 @@
+{% load static %}
+{% extends 'base.html' %}
+{% block title %}All Orders — CanteenHub Admin{% endblock %}
+{% block body_class %}role-admin{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top nav-admin">
+  <div class="container-fluid px-4">
+    <a class="navbar-brand fw-bold" href="{% url 'admin_dashboard' %}"><i class="bi bi-shield-lock-fill text-warning me-2"></i>Admin<span class="text-warning">Panel</span></a>
+    <div class="collapse navbar-collapse">
+      <ul class="navbar-nav me-auto gap-1">
+        <li class="nav-item"><a class="nav-link" href="{% url 'admin_dashboard' %}"><i class="bi bi-bar-chart-line"></i> Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'admin_user_management' %}"><i class="bi bi-people"></i> Users</a></li>
+        <li class="nav-item"><a class="nav-link active" href="{% url 'admin_all_orders' %}"><i class="bi bi-receipt"></i> All Orders</a></li>
+      </ul>
+      <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="btn btn-outline-warning btn-sm">Logout</button></form>
+    </div>
+  </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h3 fw-bold mb-0"><i class="bi bi-receipt text-admin me-2"></i>All Orders</h1>
+  <div class="d-flex gap-2">
+    {% for val, label in status_choices %}
+    <a href="?status={{ val }}" class="btn btn-sm {% if status_filter == val %}btn-admin{% else %}btn-outline-secondary{% endif %}">{{ label }}</a>
+    {% endfor %}
+    <a href="{% url 'admin_all_orders' %}" class="btn btn-sm btn-outline-secondary">All</a>
+  </div>
+</div>
+<div class="card border-0">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead><tr class="text-muted small text-uppercase"><th>#</th><th>Student</th><th>Items</th><th>Pickup</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>
+      <tbody>
+        {% for order in orders %}
+        <tr>
+          <td class="fw-semibold text-admin">#{{ order.id }}</td>
+          <td>
+            <div class="fw-semibold small">{{ order.student.get_full_name|default:order.student.username }}</div>
+            <div class="text-muted" style="font-size:.75rem">{{ order.student.email }}</div>
+          </td>
+          <td>
+            {% for oi in order.items.all|slice:":2" %}<div class="small">{{ oi.quantity }}× {{ oi.menu_item.name }}</div>{% endfor %}
+            {% if order.items.count > 2 %}<div class="small text-muted">+{{ order.items.count|add:"-2" }} more</div>{% endif %}
+          </td>
+          <td class="small">{{ order.pickup_time|time:"g:i A" }}</td>
+          <td class="fw-bold">₹{{ order.total_amount }}</td>
+          <td><span class="badge badge-status-{{ order.status }} rounded-pill">{{ order.get_status_display }}</span></td>
+          <td class="small text-muted">{{ order.created_at|date:"d M Y" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" class="text-center py-4 text-muted">No orders found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

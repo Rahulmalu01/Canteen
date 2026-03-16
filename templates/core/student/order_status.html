@@ -1,0 +1,91 @@
+{% extends 'core/base.html' %}
+{% block title %}Order #{{ order.id }} — CanteenHub{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-transparent border-0 pb-0 pt-4 px-4">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h1 class="h4 fw-bold mb-1">Order #{{ order.id }}</h1>
+            <p class="text-muted small mb-0">Placed at {{ order.created_at|time:"g:i A" }} · Pickup at {{ order.pickup_time|time:"g:i A" }}</p>
+          </div>
+          <span class="badge status-{{ order.status }} fs-6 px-3 py-2 rounded-pill" id="statusBadge">
+            {{ order.get_status_display }}
+          </span>
+        </div>
+      </div>
+      <div class="card-body px-4">
+
+        <!-- Progress Tracker -->
+        <div class="order-progress my-4">
+          {% with steps="pending,preparing,ready,completed" %}
+          {% for step in "pending,preparing,ready,completed"|split:"," %}
+          <div class="step {% if order.status == step %}active{% elif order.status == 'completed' or order.status == 'ready' and step == 'pending' or order.status == 'ready' and step == 'preparing' or order.status == 'preparing' and step == 'pending' %}done{% endif %}">
+          </div>
+          {% endfor %}
+          {% endwith %}
+        </div>
+
+        <!-- Stepper display -->
+        <div class="d-flex justify-content-between text-center mb-4" id="progressSteps">
+          {% for step, label, icon in steps_data %}
+          <div class="flex-fill step-label {% if order.status == step %}text-warning fw-bold{% elif forloop.counter0 < current_step_index %}text-success{% else %}text-muted{% endif %}">
+            <div class="step-circle {% if order.status == step %}active{% elif forloop.counter0 < current_step_index %}done{% endif %}">
+              <i class="bi {{ icon }}"></i>
+            </div>
+            <div class="small mt-1">{{ label }}</div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- Items -->
+        <h6 class="fw-bold text-muted small text-uppercase mb-2">Order Items</h6>
+        {% for oi in order.items.all %}
+        <div class="d-flex justify-content-between align-items-center py-2 {% if not forloop.last %}border-bottom border-secondary border-opacity-25{% endif %}">
+          <div>
+            <span class="fw-semibold">{{ oi.menu_item.name }}</span>
+            <span class="text-muted ms-2 small">× {{ oi.quantity }}</span>
+          </div>
+          <span class="fw-semibold">₹{{ oi.subtotal }}</span>
+        </div>
+        {% endfor %}
+        <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+          <span class="fw-bold">Total</span>
+          <span class="fw-bold fs-5 text-warning">₹{{ order.total_amount }}</span>
+        </div>
+        {% if order.notes %}
+        <div class="alert alert-secondary mt-3 py-2 small"><i class="bi bi-chat-left-text me-2"></i>{{ order.notes }}</div>
+        {% endif %}
+      </div>
+      <div class="card-footer bg-transparent px-4 pb-4">
+        <div class="d-flex gap-2">
+          <a href="{% url 'order_history' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>All Orders</a>
+          <a href="{% url 'menu' %}" class="btn btn-warning"><i class="bi bi-grid me-1"></i>Order More</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+// Auto-refresh order status every 15 seconds
+const orderId = {{ order.id }};
+const statusBadge = document.getElementById('statusBadge');
+function pollStatus() {
+  fetch(`/student/order/${orderId}/status/api/`, {method:'POST', headers:{'X-CSRFToken': getCookie('csrftoken')}})
+    .then(r => r.json())
+    .then(data => {
+      statusBadge.textContent = data.status_display;
+      statusBadge.className = `badge status-${data.status} fs-6 px-3 py-2 rounded-pill`;
+      if (data.status === 'completed' || data.status === 'cancelled') return;
+      setTimeout(pollStatus, 15000);
+    });
+}
+function getCookie(name) {
+  return document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith(name+'='))?.split('=')[1];
+}
+if ('{{ order.status }}' !== 'completed') setTimeout(pollStatus, 15000);
+</script>
+{% endblock %}

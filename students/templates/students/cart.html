@@ -1,0 +1,115 @@
+{% load static %}
+{% extends 'base.html' %}
+{% block title %}My Cart — CanteenHub{% endblock %}
+{% block body_class %}role-student{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top nav-student">
+  <div class="container-fluid px-4">
+    <a class="navbar-brand fw-bold" href="{% url 'student_dashboard' %}"><i class="bi bi-shop-window text-warning me-2"></i>Canteen<span class="text-warning">Hub</span></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sNav"><span class="navbar-toggler-icon"></span></button>
+    <div class="collapse navbar-collapse" id="sNav">
+      <ul class="navbar-nav me-auto gap-1">
+        <li class="nav-item"><a class="nav-link" href="{% url 'student_dashboard' %}"><i class="bi bi-house"></i> Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'menu' %}"><i class="bi bi-grid"></i> Menu</a></li>
+        <li class="nav-item"><a class="nav-link active" href="{% url 'cart' %}"><i class="bi bi-cart3"></i> Cart</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'order_history' %}"><i class="bi bi-clock-history"></i> Orders</a></li>
+      </ul>
+      <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="btn btn-outline-warning btn-sm" type="submit"><i class="bi bi-box-arrow-right me-1"></i>Logout</button></form>
+    </div>
+  </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-12"><h1 class="h3 fw-bold"><i class="bi bi-cart3 text-student me-2"></i>My Cart</h1></div>
+
+  {% if cart_items %}
+  <div class="col-lg-8">
+    <div class="card border-0">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr class="text-muted small text-uppercase"><th>Item</th><th>Price</th><th style="width:140px">Qty</th><th>Total</th><th></th></tr>
+            </thead>
+            <tbody id="cartTableBody">
+              {% for entry in cart_items %}
+              <tr id="cartrow_{{ entry.item.id }}">
+                <td>
+                  <div class="fw-semibold">{{ entry.item.name }}</div>
+                  <small class="text-muted">{{ entry.item.category.name }}</small>
+                </td>
+                <td class="text-muted">₹{{ entry.item.price }}</td>
+                <td>
+                  <div class="input-group input-group-sm">
+                    <button class="btn btn-outline-secondary cart-dec" data-item-id="{{ entry.item.id }}">−</button>
+                    <input type="number" class="form-control text-center cart-qty-input" id="cartqty_{{ entry.item.id }}"
+                           value="{{ entry.quantity }}" min="1" max="10"
+                           data-price="{{ entry.item.price }}" data-item-id="{{ entry.item.id }}" readonly/>
+                    <button class="btn btn-outline-secondary cart-inc" data-item-id="{{ entry.item.id }}">+</button>
+                  </div>
+                </td>
+                <td class="fw-semibold" id="linetotal_{{ entry.item.id }}">₹{{ entry.line_total }}</td>
+                <td>
+                  <button class="btn btn-sm btn-outline-danger cart-remove" data-item-id="{{ entry.item.id }}"><i class="bi bi-trash"></i></button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card border-0 border-top border-3 border-student">
+      <div class="card-header bg-transparent border-0 pb-0"><h5 class="fw-bold mb-0">Order Summary</h5></div>
+      <div class="card-body">
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted">Subtotal</span>
+          <span class="fw-bold" id="cartSubtotal">₹{{ subtotal }}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-3">
+          <span class="text-muted">Service</span>
+          <span class="text-success small fw-semibold">FREE</span>
+        </div>
+        <hr/>
+        <form method="post" action="{% url 'place_order' %}" id="placeOrderForm">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label fw-semibold">{{ form.pickup_time.label }}</label>
+            {{ form.pickup_time }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">{{ form.notes.label }}</label>
+            {{ form.notes }}
+          </div>
+          <div class="d-grid">
+            <button type="submit" class="btn btn-student btn-lg fw-bold">
+              <i class="bi bi-check-circle me-2"></i>Place Order — ₹<span id="grandTotal">{{ subtotal }}</span>
+            </button>
+          </div>
+        </form>
+        <div class="mt-3 text-center">
+          <a href="{% url 'menu' %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Continue Shopping</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% else %}
+  <div class="col-12 text-center py-5">
+    <i class="bi bi-cart-x fs-1 text-muted opacity-25 mb-3 d-block"></i>
+    <h4 class="text-muted">Your cart is empty</h4>
+    <a href="{% url 'menu' %}" class="btn btn-student mt-3 px-4">Browse Menu</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/cart.js' %}"></script>
+{% endblock %}
