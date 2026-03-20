@@ -14,12 +14,14 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-me')
 DEBUG = os.getenv("DEBUG", "False") == "True"
 ALLOWED_HOSTS = [
     "canteen-production-b127.up.railway.app",
+    "canteen-production-6d1a.up.railway.app"
     "127.0.0.1",
     "localhost",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     "https://canteen-production-b127.up.railway.app",
+    "https://canteen-production-6d1a.up.railway.app",
 ]
 
 INSTALLED_APPS = [
