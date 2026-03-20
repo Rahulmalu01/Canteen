@@ -9,11 +9,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('django-admin/', admin.site.urls),
-
-    # Shared: landing, register, logout
     path('', include('accounts.urls')),
-
-    # Role-specific apps (each has its own /login/ + dashboard)
     path('student/', include('students.urls')),
     path('kitchen/', include('kitchen.urls')),
     path('staff/', include('canteen_staff.urls')),

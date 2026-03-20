@@ -1,7 +1,6 @@
 """
 Django settings — multi-app College Canteen Management System
 """
-
 import os
 from pathlib import Path
 import dj_database_url
@@ -47,7 +46,6 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         # Project-level templates dir (base.html, landing.html, register.html)
         'DIRS': [BASE_DIR / 'templates'],
-        # Finds <app>/templates/ directories automatically
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

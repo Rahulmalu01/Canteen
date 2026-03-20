@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Today's Orders - Canteen Staff{% endblock %}
+
+{% block navbar %}
+  {% include "canteen_staff/navbar.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card-header mb-4" style="border-bottom: none; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1>Today's Orders</h1>
+            <p class="text-secondary">{{ today|date:"l, F j, Y" }}</p>
+        </div>
+        <a href="{% url 'staff_dashboard' %}" class="btn btn-outline">Back to Dashboard</a>
+    </div>
+
+    {% if orders %}
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Student</th>
+                        <th>Items</th>
+                        <th>Total Amount</th>
+                        <th>Status</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td class="font-medium">#{{ order.id }}</td>
+                        <td>{{ order.student.user.first_name }} {{ order.student.user.last_name }} ({{ order.student.student_id }})</td>
+                        <td>
+                            <ul style="list-style-type: none; padding: 0; margin: 0; font-size: 0.875rem;">
+                            {% for item in order.items.all %}
+                                <li>{{ item.quantity }}x {{ item.menu_item.name }}</li>
+                            {% endfor %}
+                            </ul>
+                        </td>
+                        <td class="font-bold text-primary">₹{{ order.total_amount }}</td>
+                        <td>
+                            {% if order.status == 'PE' %}
+                            <span class="badge badge-warning">Pending</span>
+                            {% elif order.status == 'PR' %}
+                            <span class="badge badge-info">Preparing</span>
+                            {% elif order.status == 'RE' %}
+                            <span class="badge badge-success">Ready</span>
+                            {% elif order.status == 'CO' %}
+                            <span class="badge" style="background-color: #E5E7EB; color: #374151;">Completed</span>
+                            {% elif order.status == 'CA' %}
+                            <span class="badge badge-danger">Cancelled</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-secondary text-sm">{{ order.created_at|date:"h:i A" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="card text-center" style="padding: 4rem 2rem;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="margin: 0 auto; color: var(--text-secondary); margin-bottom: 1rem;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+        <h3 class="h5">No orders today</h3>
+        <p class="text-secondary">Orders placed by students today will appear here.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
