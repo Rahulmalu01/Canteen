@@ -16,6 +16,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Run Django migrations and collect static files
+RUN python manage.py migrate --noinput
 RUN python manage.py collectstatic --noinput
 
 # Expose port 8000
